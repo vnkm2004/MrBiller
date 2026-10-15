@@ -220,7 +220,7 @@ export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSig
                   <p className="mt-1 text-xs leading-5 text-slate-500">{plan.description || 'Monthly shop access'}</p>
                 </div>
                 <p className="mt-3 flex items-baseline gap-1"><span className="text-3xl font-bold tracking-tight">{plan.price === null ? 'Contact' : formatCurrency(Number(plan.price), 'en')}</span><span className="text-sm text-slate-500">{plan.months === 1 ? '/month' : `/${plan.months} months`}</span></p>
-                <p className="mt-4 flex items-center gap-2 text-sm text-slate-700"><Users size={16} className="text-orange-600" /> Up to {plan.max_users} user IDs</p>
+                <p className="mt-4 flex items-center gap-2 text-sm text-slate-700"><Users size={16} className="text-orange-600" /> {plan.max_users === 1 ? '1 user ID' : `Up to ${plan.max_users} user IDs`}</p>
                 <button onClick={onContact} className={`mt-6 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${index === 2 ? 'bg-orange-600 text-white hover:bg-orange-500' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}>Ask about this plan</button>
               </article>
             ))}
