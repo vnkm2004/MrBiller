@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#000000"/>
+  <rect x="24" y="24" width="464" height="464" rx="80" fill="#0a0a0a" stroke="#e85d04" stroke-width="4"/>
+  <text x="256" y="340" font-family="Inter, system-ui, sans-serif" font-size="280" font-weight="800" fill="#e85d04" text-anchor="middle">B</text>
+  <rect x="180" y="370" width="152" height="8" rx="4" fill="#2a9d8f"/>
+</svg>
