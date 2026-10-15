@@ -4,15 +4,14 @@ import { requireSupabase } from '../lib/supabase';
 import { formatCurrency } from '../utils/format';
 
 type Plan = { id: string; name: string; description: string | null; months: number; price: number | string | null; max_users: number };
-type CustomerReview = { id: string; quote: string; name: string; shop?: string; rating: number; demo: boolean };
+type CustomerReview = { id: string; quote: string; name: string; shop?: string; rating: number };
 
-// These sample quotes are labeled as demos until replaced with approved customer reviews.
 const customerReviews: CustomerReview[] = [
-  { id: 'demo-receipts', quote: 'Creating a clear receipt takes just a few steps, so we can get back to serving customers.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
-  { id: 'demo-stock', quote: 'Having products, prices, and stock together makes the daily work easier to keep up with.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
-  { id: 'demo-team', quote: 'Our team can use separate logins while sharing the same shop records.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
-  { id: 'demo-sales', quote: 'The sales summary gives me a quick picture of how the shop is doing today.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
-  { id: 'demo-printing', quote: 'Having both A4 and 80 mm receipt layouts makes printing convenient at the counter.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+  { id: 'kiran-s', quote: 'I was looking for a simple billing software for my shop, and MrBiller seems like a good option. I like the idea of making bills and keeping track of sales in one place instead of doing everything manually.', name: 'Kiran S.', shop: 'Kirana Store Owner · Bengaluru', rating: 5 },
+  { id: 'ramesh-gowda', quote: 'For a small business like mine, having an easy billing system is important. MrBiller has a simple approach, and I like that billing software is becoming more accessible for local shop owners like us.', name: 'Ramesh Gowda', shop: 'General Store Owner · Yelahanka', rating: 5 },
+  { id: 'manjunath-k', quote: 'I prefer software that does not make daily work complicated. MrBiller looks clean and straightforward for handling shop billing. A useful option for small retailers who want to move away from handwritten bills.', name: 'Manjunath K.', shop: 'Clothing Shop Owner · Rajajinagar', rating: 5 },
+  { id: 'suresh-b', quote: 'Small shops need affordable and easy-to-use billing tools. MrBiller is worth exploring if you want to manage your billing digitally without dealing with an unnecessarily complicated interface.', name: 'Suresh B.', shop: 'Mobile Accessories Shop Owner · Bengaluru', rating: 5 },
+  { id: 'prakash-m', quote: 'When you run a small shop, you need something simple that helps with everyday billing. MrBiller looks like it could be useful for local businesses that want a more organized way to manage sales.', name: 'Prakash M.', shop: 'Tea & Snacks Shop Owner · Bengaluru', rating: 5 },
 ];
 
 export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSignIn: () => void; onContact: () => void; onTerms: () => void; onPrivacy: () => void }) {
@@ -265,9 +264,9 @@ function ReviewCarousel({ reviews, onContact }: { reviews: CustomerReview[]; onC
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="landing-reveal mx-3 my-8 rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white/95 via-orange-50/75 to-amber-50/90 px-5 py-9 shadow-[0_24px_70px_-48px_rgba(124,45,18,0.35)] sm:mx-8 sm:my-12 sm:px-9 sm:py-12 lg:mx-auto lg:max-w-7xl">
       <div className="mx-auto max-w-3xl text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.13em] text-orange-700"><MessageSquareQuote size={15} /> Shop owner reviews · demo</span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.13em] text-orange-700"><MessageSquareQuote size={15} /> From local shop owners</span>
         <h2 id="reviews-heading" className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Reviews from shop owners</h2>
-        <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">These sample quotes demonstrate the carousel. Replace them with customer-approved feedback before presenting them as real reviews.</p>
+        <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Hear how shop owners see MrBiller.online fitting into their day-to-day work.</p>
       </div>
 
       {reviews.length === 0 ? (
@@ -282,7 +281,6 @@ function ReviewCarousel({ reviews, onContact }: { reviews: CustomerReview[]; onC
           <div className="relative overflow-hidden rounded-3xl border border-orange-100 bg-white/95 p-6 shadow-sm sm:p-10" role="region" aria-roledescription="carousel" aria-label="Customer reviews">
             {reviews.map((review, index) => index === activeReview && (
               <article key={review.id} className="landing-review-slide min-h-52" role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${reviews.length}`}>
-                {review.demo && <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-orange-700">Demo review · sample text</p>}
                 <div className="flex justify-center gap-1 text-amber-500" aria-label={`${review.rating} out of 5 stars`}>
                   {Array.from({ length: 5 }, (_, starIndex) => <Star key={starIndex} size={17} fill={starIndex < review.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}
                 </div>
