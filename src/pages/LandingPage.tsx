@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowRight, BadgeCheck, BarChart3, Check, ChevronRight, FileText, LifeBuoy, PackageCheck, Printer, ReceiptText, ShieldCheck, Sparkles, Store, TrendingUp, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, BarChart3, Check, ChevronLeft, ChevronRight, FileText, LifeBuoy, MessageSquareQuote, PackageCheck, Printer, ReceiptText, ShieldCheck, Sparkles, Star, Store, TrendingUp, Users } from 'lucide-react';
 import { requireSupabase } from '../lib/supabase';
 import { formatCurrency } from '../utils/format';
 
 type Plan = { id: string; name: string; description: string | null; months: number; price: number | string | null; max_users: number };
+type CustomerReview = { id: string; quote: string; name: string; shop?: string; rating: number; demo: boolean };
+
+// These sample quotes are labeled as demos until replaced with approved customer reviews.
+const customerReviews: CustomerReview[] = [
+  { id: 'demo-receipts', quote: 'Creating a clear receipt takes just a few steps, so we can get back to serving customers.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+  { id: 'demo-stock', quote: 'Having products, prices, and stock together makes the daily work easier to keep up with.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+  { id: 'demo-team', quote: 'Our team can use separate logins while sharing the same shop records.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+  { id: 'demo-sales', quote: 'The sales summary gives me a quick picture of how the shop is doing today.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+  { id: 'demo-printing', quote: 'Having both A4 and 80 mm receipt layouts makes printing convenient at the counter.', name: 'Sample shop owner', shop: 'Example review', rating: 5, demo: true },
+];
 
 export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSignIn: () => void; onContact: () => void; onTerms: () => void; onPrivacy: () => void }) {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -87,6 +97,7 @@ export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSig
         <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
           <a href="#features" className="transition hover:text-orange-600">Features</a>
           <a href="#workflow" className="transition hover:text-orange-600">How it works</a>
+          <a href="#reviews" className="transition hover:text-orange-600">Reviews</a>
           <a href="#plans" className="transition hover:text-orange-600">Plans</a>
           <button onClick={onContact} className="transition hover:text-orange-600">Contact</button>
         </nav>
@@ -97,6 +108,7 @@ export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSig
       <nav aria-label="Page sections" className="relative z-10 mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 pb-3 text-sm font-medium text-slate-600 sm:px-8 md:hidden">
         <a href="#features" className="shrink-0 rounded-full bg-white px-3.5 py-2 shadow-sm">Features</a>
         <a href="#workflow" className="shrink-0 rounded-full bg-white px-3.5 py-2 shadow-sm">How it works</a>
+        <a href="#reviews" className="shrink-0 rounded-full bg-white px-3.5 py-2 shadow-sm">Reviews</a>
         <a href="#plans" className="shrink-0 rounded-full bg-white px-3.5 py-2 shadow-sm">Plans</a>
         <button onClick={onContact} className="shrink-0 rounded-full bg-white px-3.5 py-2 shadow-sm">Contact</button>
       </nav>
@@ -183,6 +195,8 @@ export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSig
           </div>
         </section>
 
+        <ReviewCarousel reviews={customerReviews} onContact={onContact} />
+
         <section id="plans" className="landing-reveal mx-3 my-6 rounded-[2rem] border border-orange-100/80 bg-white/65 px-4 py-8 sm:mx-8 sm:my-10 sm:px-8 sm:py-12 lg:mx-auto lg:max-w-7xl">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -231,6 +245,62 @@ export function LandingPage({ onSignIn, onContact, onTerms, onPrivacy }: { onSig
         </div>
       </footer>
     </div>
+  );
+}
+
+function ReviewCarousel({ reviews, onContact }: { reviews: CustomerReview[]; onContact: () => void }) {
+  const [activeReview, setActiveReview] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (reviews.length < 2 || paused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => {
+      setActiveReview((current) => (current + 1) % reviews.length);
+    }, 5500);
+    return () => window.clearInterval(timer);
+  }, [paused, reviews.length]);
+
+  const showReview = (index: number) => setActiveReview((index + reviews.length) % reviews.length);
+
+  return (
+    <section id="reviews" aria-labelledby="reviews-heading" className="landing-reveal mx-3 my-8 rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white/95 via-orange-50/75 to-amber-50/90 px-5 py-9 shadow-[0_24px_70px_-48px_rgba(124,45,18,0.35)] sm:mx-8 sm:my-12 sm:px-9 sm:py-12 lg:mx-auto lg:max-w-7xl">
+      <div className="mx-auto max-w-3xl text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.13em] text-orange-700"><MessageSquareQuote size={15} /> Shop owner reviews · demo</span>
+        <h2 id="reviews-heading" className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Reviews from shop owners</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">These sample quotes demonstrate the carousel. Replace them with customer-approved feedback before presenting them as real reviews.</p>
+      </div>
+
+      {reviews.length === 0 ? (
+        <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-orange-100 bg-white/90 px-6 py-8 text-center shadow-sm sm:px-10 sm:py-10">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-600"><MessageSquareQuote size={22} /></span>
+          <p className="mt-4 text-lg font-semibold text-slate-900">Customer reviews are coming soon</p>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">We’ll share feedback here once shop owners have given permission to feature their words. Have you used MrBiller.online? We’d love to hear from you.</p>
+          <button onClick={onContact} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-500 focus:outline-none focus:ring-4 focus:ring-orange-200">Share your feedback <ArrowRight size={16} /></button>
+        </div>
+      ) : (
+        <div className="mx-auto mt-8 max-w-4xl" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false); }}>
+          <div className="relative overflow-hidden rounded-3xl border border-orange-100 bg-white/95 p-6 shadow-sm sm:p-10" role="region" aria-roledescription="carousel" aria-label="Customer reviews">
+            {reviews.map((review, index) => index === activeReview && (
+              <article key={review.id} className="landing-review-slide min-h-52" role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${reviews.length}`}>
+                {review.demo && <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-orange-700">Demo review · sample text</p>}
+                <div className="flex justify-center gap-1 text-amber-500" aria-label={`${review.rating} out of 5 stars`}>
+                  {Array.from({ length: 5 }, (_, starIndex) => <Star key={starIndex} size={17} fill={starIndex < review.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}
+                </div>
+                <blockquote className="mx-auto mt-5 max-w-3xl text-center text-xl font-medium leading-8 tracking-tight text-slate-800 sm:text-2xl sm:leading-9">“{review.quote}”</blockquote>
+                <div className="mt-6 text-center"><p className="font-semibold text-slate-950">{review.name}</p>{review.shop && <p className="mt-1 text-sm text-slate-500">{review.shop}</p>}</div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-5 flex items-center justify-center gap-4">
+            <button type="button" onClick={() => showReview(activeReview - 1)} disabled={reviews.length < 2} aria-label="Previous review" className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-400 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={18} /></button>
+            <div className="flex items-center gap-2" aria-label="Choose a review">
+              {reviews.map((review, index) => <button type="button" key={review.id} onClick={() => showReview(index)} aria-label={`Show review ${index + 1}`} aria-current={index === activeReview ? 'true' : undefined} className={`h-2.5 rounded-full transition-all ${index === activeReview ? 'w-7 bg-orange-600' : 'w-2.5 bg-orange-200 hover:bg-orange-300'}`} />)}
+            </div>
+            <button type="button" onClick={() => showReview(activeReview + 1)} disabled={reviews.length < 2} aria-label="Next review" className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-400 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={18} /></button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
