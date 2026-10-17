@@ -302,6 +302,38 @@ const adminHandler = withSupabase({ auth: 'user' }, async (request, context) => 
       return json({ subscription });
     }
 
+    if (body.action === 'set_subscription_plan') {
+      const shopId = body.shop_id || '';
+      const planId = body.plan_id || '';
+      if (!shopId || !planId) return json({ error: 'Choose a shop and plan.' }, 400);
+
+      const [planResult, subscriptionResult, memberCountResult] = await Promise.all([
+        adminClient.from('subscription_plans').select('id, name, max_users').eq('id', planId).eq('active', true).maybeSingle(),
+        adminClient.from('shop_subscriptions').select('shop_id').eq('shop_id', shopId).maybeSingle(),
+        adminClient.from('shop_memberships').select('id', { count: 'exact', head: true }).eq('shop_id', shopId).eq('active', true),
+      ]);
+      if (planResult.error) throw planResult.error;
+      if (subscriptionResult.error) throw subscriptionResult.error;
+      if (memberCountResult.error) throw memberCountResult.error;
+      if (!planResult.data) return json({ error: 'Choose an active subscription plan.' }, 400);
+      if (!subscriptionResult.data) return json({ error: 'Activate a subscription before changing its plan.' }, 400);
+
+      const activeUsers = memberCountResult.count || 0;
+      if (activeUsers > planResult.data.max_users) {
+        return json({
+          error: `This shop has ${activeUsers} active logins. Disable logins until the count fits the ${planResult.data.name} plan limit of ${planResult.data.max_users}.`,
+        }, 409);
+      }
+
+      const { data: subscription, error } = await adminClient.from('shop_subscriptions')
+        .update({ plan_id: planResult.data.id, max_users: planResult.data.max_users, granted_by: actorId, updated_at: new Date().toISOString() })
+        .eq('shop_id', shopId)
+        .select('shop_id, plan_id, starts_at, expires_at, max_users')
+        .single();
+      if (error) throw error;
+      return json({ subscription });
+    }
+
     if (body.action === 'resolve_subscription_request') {
       if (!body.request_id || typeof body.approve !== 'boolean') return json({ error: 'Choose a request and resolution.' }, 400);
       const { data: requestRow, error } = await adminClient.rpc('admin_resolve_subscription_request', {

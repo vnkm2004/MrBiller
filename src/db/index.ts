@@ -90,6 +90,7 @@ type InvoiceRow = {
   subtotal: number | string;
   gst_rate: number | string;
   gst_amount: number | string;
+  gst_inclusive?: boolean | null;
   total: number | string;
   customer_name: string | null;
   customer_phone: string | null;
@@ -122,6 +123,7 @@ function mapInvoice(row: InvoiceRow): Invoice {
     subtotal: Number(row.subtotal),
     gstRate: Number(row.gst_rate),
     gstAmount: Number(row.gst_amount),
+    gstInclusive: row.gst_inclusive ?? false,
     total: Number(row.total),
     customerName: row.customer_name || undefined,
     customerPhone: row.customer_phone || undefined,
@@ -258,6 +260,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   phone: '',
   email: '',
   gstNumber: '',
+  fssaiNumber: '',
   logo: '',
   defaultGstRate: 0,
   currency: 'INR',
@@ -331,6 +334,7 @@ export async function saveInvoice(invoice: Omit<Invoice, 'id'>): Promise<Invoice
     p_subtotal: invoice.subtotal,
     p_gst_rate: invoice.gstRate,
     p_gst_amount: invoice.gstAmount,
+    p_gst_inclusive: invoice.gstInclusive ?? false,
     p_total: invoice.total,
     p_customer_name: invoice.customerName || null,
     p_customer_phone: invoice.customerPhone || null,

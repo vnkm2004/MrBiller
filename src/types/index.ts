@@ -39,6 +39,8 @@ export interface Invoice {
   subtotal: number;
   gstRate: number; // percentage, e.g. 5, 12, 18, 28
   gstAmount: number;
+  /** Whether GST is included in item prices rather than added to the subtotal. */
+  gstInclusive?: boolean;
   total: number;
   customerName?: string;
   customerPhone?: string;
@@ -55,6 +57,7 @@ export interface StoreSettings {
   phone: string;
   email?: string;
   gstNumber?: string;
+  fssaiNumber?: string;
   logo?: string; // base64 data URL
   defaultGstRate: number;
   currency: string; // 'INR'

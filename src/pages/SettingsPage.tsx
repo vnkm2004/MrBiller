@@ -96,6 +96,7 @@ export function SettingsPage() {
         phone: form.phone,
         email: form.email,
         gstNumber: form.gstNumber,
+        fssaiNumber: form.fssaiNumber,
         logo: form.logo,
         defaultGstRate: form.defaultGstRate,
         accentColor: form.accentColor || DEFAULT_ACCENT_COLOR,
@@ -233,6 +234,15 @@ export function SettingsPage() {
           onChange={(e) => update('gstNumber', e.target.value)}
           icon={<FileText size={16} />}
           placeholder="29ABCDE1234F1Z5"
+        />
+
+        <Input
+          label={t('settings.fssaiNumber')}
+          value={form.fssaiNumber || ''}
+          onChange={(e) => update('fssaiNumber', e.target.value)}
+          icon={<FileText size={16} />}
+          placeholder="14-digit FSSAI number"
+          inputMode="numeric"
         />
 
         {/* Default GST rate */}

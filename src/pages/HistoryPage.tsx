@@ -222,13 +222,17 @@ export function HistoryPage() {
             {/* Totals */}
             <div className="border-t border-default pt-3 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-secondary">{t('billing.subtotal')}</span>
+                <span className="text-secondary">
+                  {viewing.gstRate > 0 && viewing.gstInclusive
+                    ? t('billing.subtotalGstIncluded')
+                    : t('billing.subtotal')}
+                </span>
                 <span className="text-primary">{formatCurrency(viewing.subtotal, language)}</span>
               </div>
               {viewing.gstRate > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-secondary">
-                    {t('billing.gstRate')} ({viewing.gstRate}%)
+                    {viewing.gstInclusive ? t('billing.gstIncluded') : t('billing.gstRate')} ({viewing.gstRate}%)
                   </span>
                   <span className="text-primary">{formatCurrency(viewing.gstAmount, language)}</span>
                 </div>

@@ -7,6 +7,10 @@ export function calculateGST(subtotal: number, gstRate: number): number {
   return (subtotal * gstRate) / 100;
 }
 
+export function calculateInclusiveGST(totalPrice: number, gstRate: number): number {
+  return (totalPrice * gstRate) / (100 + gstRate);
+}
+
 export function calculateTotal(subtotal: number, gstRate: number): number {
   return subtotal + calculateGST(subtotal, gstRate);
 }

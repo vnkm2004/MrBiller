@@ -126,6 +126,13 @@ export function generateInvoicePDF(options: PDFOptions): jsPDF {
     y += 5;
   }
 
+  const fssaiNumber = englishPdfText(settings.fssaiNumber);
+  if (fssaiNumber) {
+    doc.setFontSize(9);
+    doc.text(`${englishPdfTranslation('settings.fssaiNumber')}: ${fssaiNumber}`, pageWidth / 2, y, { align: 'center' });
+    y += 5;
+  }
+
   // --- GST number (only printed when GST is actually applied to this invoice) ---
   const gstNumber = englishPdfText(settings.gstNumber);
   if (gstNumber && invoice.gstRate > 0) {
@@ -206,12 +213,18 @@ export function generateInvoicePDF(options: PDFOptions): jsPDF {
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text(englishPdfTranslation('receipt.subtotal'), pageWidth - margin - 40, y);
+  const subtotalLabel = invoice.gstRate > 0 && invoice.gstInclusive
+    ? englishPdfTranslation('receipt.subtotalGstIncluded')
+    : englishPdfTranslation('receipt.subtotal');
+  doc.text(subtotalLabel, pageWidth - margin - 40, y);
   doc.text(formatCurrency(invoice.subtotal, 'en'), pageWidth - margin, y, { align: 'right' });
   y += 5;
 
   if (invoice.gstRate > 0) {
-    doc.text(`${englishPdfTranslation('receipt.gst')} (${invoice.gstRate}%)`, pageWidth - margin - 40, y);
+    const gstLabel = invoice.gstInclusive
+      ? `${englishPdfTranslation('receipt.gstIncluded')} (${invoice.gstRate}%)`
+      : `${englishPdfTranslation('receipt.gst')} (${invoice.gstRate}%)`;
+    doc.text(gstLabel, pageWidth - margin - 40, y);
     doc.text(formatCurrency(invoice.gstAmount, 'en'), pageWidth - margin, y, { align: 'right' });
     y += 5;
   }
@@ -336,7 +349,11 @@ function renderThermalInvoiceContent(
   if (address) addWrappedText(address, contentWidth, 'center', 3.3);
   const storePhone = englishPdfText(settings.phone);
   const gstNumber = englishPdfText(settings.gstNumber);
+  const fssaiNumber = englishPdfText(settings.fssaiNumber);
   if (storePhone) addWrappedText(`${englishPdfTranslation('receipt.phone')}: ${storePhone}`, contentWidth, 'center', 3.5);
+  if (fssaiNumber) {
+    addWrappedText(`${englishPdfTranslation('settings.fssaiNumber')}: ${fssaiNumber}`, contentWidth, 'center', 3.5);
+  }
   if (gstNumber && invoice.gstRate > 0) {
     addWrappedText(`${englishPdfTranslation('settings.gstNumber')}: ${gstNumber}`, contentWidth, 'center', 3.5);
   }
@@ -417,9 +434,15 @@ function renderThermalInvoiceContent(
     y += bold ? 5.5 : 4.5;
   };
 
-  drawTotalRow(englishPdfTranslation('receipt.subtotal'), formatCurrency(invoice.subtotal, 'en'));
+  const subtotalLabel = invoice.gstRate > 0 && invoice.gstInclusive
+    ? englishPdfTranslation('receipt.subtotalGstIncluded')
+    : englishPdfTranslation('receipt.subtotal');
+  drawTotalRow(subtotalLabel, formatCurrency(invoice.subtotal, 'en'));
   if (invoice.gstRate > 0) {
-    drawTotalRow(`${englishPdfTranslation('receipt.gst')} (${invoice.gstRate}%)`, formatCurrency(invoice.gstAmount, 'en'));
+    const gstLabel = invoice.gstInclusive
+      ? `${englishPdfTranslation('receipt.gstIncluded')} (${invoice.gstRate}%)`
+      : `${englishPdfTranslation('receipt.gst')} (${invoice.gstRate}%)`;
+    drawTotalRow(gstLabel, formatCurrency(invoice.gstAmount, 'en'));
   }
   drawSeparator(accentColor, 4);
   drawTotalRow(englishPdfTranslation('receipt.total'), formatCurrency(invoice.total, 'en'), true, 10);

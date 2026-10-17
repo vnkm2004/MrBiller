@@ -94,6 +94,8 @@ export function AdminPage() {
   const [grantFor, setGrantFor] = useState<string | null>(null);
   const [grantMonths, setGrantMonths] = useState('1');
   const [grantPlanId, setGrantPlanId] = useState('');
+  const [planAssignmentFor, setPlanAssignmentFor] = useState<string | null>(null);
+  const [assignedPlanId, setAssignedPlanId] = useState('');
   const [planId, setPlanId] = useState<string | null>(null);
   const [planName, setPlanName] = useState('');
   const [planDescription, setPlanDescription] = useState('');
@@ -323,6 +325,33 @@ export function AdminPage() {
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not update the shop subscription.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleAssignPlan = async (shop: Shop) => {
+    const plan = data.plans.find((item) => item.id === assignedPlanId && item.active);
+    if (!plan) {
+      setError('Choose an active plan.');
+      return;
+    }
+    const activeMembers = data.members.filter((member) => member.shop_id === shop.id && member.active).length;
+    if (activeMembers > plan.max_users) {
+      setError(`${shop.name} has ${activeMembers} active logins. Disable logins until the count fits the ${plan.name} plan limit of ${plan.max_users}.`);
+      return;
+    }
+
+    setBusy(`assign-plan:${shop.id}`);
+    setError('');
+    try {
+      await callAdmin('set_subscription_plan', { shop_id: shop.id, plan_id: plan.id });
+      setPlanAssignmentFor(null);
+      setAssignedPlanId('');
+      showNotice(`${plan.name} plan assigned to ${shop.name}. The current access expiry is unchanged.`);
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not change the shop plan.');
     } finally {
       setBusy(null);
     }
@@ -761,6 +790,18 @@ export function AdminPage() {
                   <button className="btn-secondary flex items-center gap-2" onClick={() => { setGrantFor(grantFor === shop.id ? null : shop.id); setGrantPlanId(''); setGrantMonths('1'); }}>
                     <CalendarDays size={16} /> {isSubscribed ? 'Extend subscription' : 'Activate subscription'}
                   </button>
+                  {subscription && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() => {
+                        setPlanAssignmentFor(planAssignmentFor === shop.id ? null : shop.id);
+                        setAssignedPlanId(subscription.plan_id || '');
+                        setGrantFor(null);
+                      }}
+                    >
+                      Change plan
+                    </button>
+                  )}
                   <button className="btn-secondary flex items-center gap-2" onClick={() => void handleShopStatus(shop)} disabled={busy === `shop:${shop.id}`}>
                     <Power size={16} /> {shop.active ? 'Suspend' : 'Reactivate'}
                   </button>
@@ -797,6 +838,31 @@ export function AdminPage() {
                     </button>
                   </div>
                   <p className="text-xs text-muted">If the shop already has active time, the new months are added after its current expiry.</p>
+                </div>
+              )}
+
+              {planAssignmentFor === shop.id && subscription && (
+                <div className="rounded-lg bg-secondary p-3 space-y-3">
+                  <p className="text-sm font-medium text-primary">Change plan for {shop.name}</p>
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <label className="block flex-1 space-y-1.5">
+                      <span className="text-sm font-medium text-secondary">Subscription plan</span>
+                      <select className="input-field" value={assignedPlanId} onChange={(event) => setAssignedPlanId(event.target.value)}>
+                        <option value="">Select a plan</option>
+                        {data.plans.filter((plan) => plan.active || plan.id === subscription.plan_id).map((plan) => (
+                          <option key={plan.id} value={plan.id}>{plan.name} · {plan.months} mo. · {plan.max_users} user IDs</option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      className="btn-primary"
+                      onClick={() => void handleAssignPlan(shop)}
+                      disabled={busy === `assign-plan:${shop.id}` || !assignedPlanId || assignedPlanId === subscription.plan_id}
+                    >
+                      {busy === `assign-plan:${shop.id}` ? 'Saving…' : 'Save plan'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted">This plan applies to everyone using this shop. The current access expiry stays the same.</p>
                 </div>
               )}
 

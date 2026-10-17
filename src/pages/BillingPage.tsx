@@ -13,7 +13,7 @@ import {
   saveInvoice,
 } from '../db';
 import type { InvoiceItem, PaymentMethod, Invoice, Product } from '../types';
-import { GST_SLABS, calculateGST, calculateTotal } from '../utils/gst';
+import { GST_SLABS, calculateGST, calculateInclusiveGST, calculateTotal } from '../utils/gst';
 import { formatCurrency } from '../utils/format';
 import { convertQuantity, getCompatibleUnits, isMassUnit } from '../utils/units';
 import { useApp } from '../context/AppContext';
@@ -48,6 +48,7 @@ export function BillingPage() {
 
   // GST and billing options
   const [enableGst, setEnableGst] = useState(false);
+  const [gstInclusive, setGstInclusive] = useState(true);
   const [gstRate, setGstRate] = useState(0);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -83,12 +84,10 @@ export function BillingPage() {
     );
   }, [products, searchQuery]);
 
-  // Pre-fill the GST rate from settings when the page loads,
-  // but always leave the toggle OFF — user must explicitly enable GST per bill.
+  // Pre-fill the GST rate from settings, but require an explicit per-bill choice to apply GST.
   useEffect(() => {
     if (settings?.defaultGstRate && settings.defaultGstRate > 0) {
       setGstRate(settings.defaultGstRate);
-      // intentionally NOT setting setEnableGst(true)
     }
   }, [settings]);
 
@@ -279,8 +278,10 @@ export function BillingPage() {
 
   // Calculate totals
   const subtotal = billItems.reduce((sum, item) => sum + item.total, 0);
-  const gstAmount = enableGst ? calculateGST(subtotal, gstRate) : 0;
-  const total = enableGst ? calculateTotal(subtotal, gstRate) : subtotal;
+  const gstAmount = enableGst
+    ? (gstInclusive ? calculateInclusiveGST(subtotal, gstRate) : calculateGST(subtotal, gstRate))
+    : 0;
+  const total = enableGst && !gstInclusive ? calculateTotal(subtotal, gstRate) : subtotal;
 
   const hasUnitOption =
     BUILT_IN_UNITS.includes(unit) || customUnits?.some((customUnit) => customUnit.name === unit);
@@ -324,6 +325,7 @@ export function BillingPage() {
         subtotal,
         gstRate: enableGst ? gstRate : 0,
         gstAmount,
+        gstInclusive: enableGst && gstRate > 0 && gstInclusive,
         total,
         customerName: customerName.trim() || undefined,
         customerPhone: customerPhone.trim() || undefined,
@@ -338,6 +340,8 @@ export function BillingPage() {
       setCustomerName('');
       setCustomerPhone('');
       setPaymentMethod('');
+      setEnableGst(false);
+      setGstInclusive(true);
     } catch (error) {
       const message = error instanceof Error
         ? error.message
@@ -356,6 +360,8 @@ export function BillingPage() {
   const handleClear = () => {
     setBillItems([]);
     setBillError('');
+    setEnableGst(false);
+    setGstInclusive(true);
     resetProductForm();
     setCustomerName('');
     setCustomerPhone('');
@@ -625,32 +631,49 @@ export function BillingPage() {
 
           {/* GST rate selector */}
           {enableGst && (
-            <div className="flex gap-2 flex-wrap">
-              {GST_SLABS.filter((s) => s > 0).map((rate) => (
-                <button
-                  key={rate}
-                  onClick={() => setGstRate(rate)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    gstRate === rate
-                      ? 'bg-accent text-accent-foreground'
-                      : 'bg-secondary text-secondary'
-                  }`}
-                >
-                  {rate}%
-                </button>
-              ))}
+            <div className="space-y-3">
+              <div className="flex gap-2 flex-wrap">
+                {GST_SLABS.filter((s) => s > 0).map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => setGstRate(rate)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      gstRate === rate
+                        ? 'bg-accent text-accent-foreground'
+                        : 'bg-secondary text-secondary'
+                    }`}
+                  >
+                    {rate}%
+                  </button>
+                ))}
+              </div>
+              <Select
+                label={t('billing.gstPriceMode')}
+                value={gstInclusive ? 'inclusive' : 'exclusive'}
+                onChange={(event) => setGstInclusive(event.target.value === 'inclusive')}
+              >
+                <option value="inclusive">{t('billing.gstIncludedInPrice')}</option>
+                <option value="exclusive">{t('billing.gstAddOnTop')}</option>
+              </Select>
+              <p className="text-xs text-muted">{t('billing.gstIncludedHint')}</p>
             </div>
           )}
 
           {/* Totals */}
           <div className="space-y-2 border-t border-default pt-3">
             <div className="flex justify-between text-sm">
-              <span className="text-secondary">{t('billing.subtotal')}</span>
+              <span className="text-secondary">
+                {enableGst && gstRate > 0 && gstInclusive
+                  ? t('billing.subtotalGstIncluded')
+                  : t('billing.subtotal')}
+              </span>
               <span className="text-primary font-medium">{formatCurrency(subtotal, language)}</span>
             </div>
             {enableGst && gstRate > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-secondary">{t('billing.gstRate')} ({gstRate}%)</span>
+                <span className="text-secondary">
+                  {gstInclusive ? t('billing.gstIncluded') : t('billing.gstRate')} ({gstRate}%)
+                </span>
                 <span className="text-primary font-medium">{formatCurrency(gstAmount, language)}</span>
               </div>
             )}
